@@ -20,14 +20,8 @@ public class CreditAccountService implements AccountService {
 
 	private static final BigDecimal INITIAL_WITHDRAW_FEE = BigDecimal.valueOf(1.02);
 	private static final BigDecimal FINAL_WITHDRAW_FEE = BigDecimal.valueOf(1.05);
-	private static final HashMap<Long, BigDecimal> WITHDRAW_RULES = new HashMap<Long, BigDecimal>()
-	{{
-		put(0L, BigDecimal.ONE);
-		put(1L, BigDecimal.ONE);
-		put(2L, BigDecimal.ONE);
-		put(3L, INITIAL_WITHDRAW_FEE);
-	}};
-	private Map<UUID, Account> accounts;
+	private static final Map<Long, BigDecimal> WITHDRAW_RULES = buildWithdrawRules();
+	private final Map<UUID, Account> accounts;
 
 	public CreditAccountService() {
 		this.accounts = new HashMap<>();
@@ -177,5 +171,15 @@ public class CreditAccountService implements AccountService {
 		}
 
 		return account.getStatement();
+	}
+
+	private static Map<Long, BigDecimal> buildWithdrawRules() {
+		Map<Long, BigDecimal> withdrawRules = new HashMap<>();
+		withdrawRules.put(0L, BigDecimal.ONE);
+		withdrawRules.put(1L, BigDecimal.ONE);
+		withdrawRules.put(2L, BigDecimal.ONE);
+		withdrawRules.put(3L, INITIAL_WITHDRAW_FEE);
+
+		return withdrawRules;
 	}
 }

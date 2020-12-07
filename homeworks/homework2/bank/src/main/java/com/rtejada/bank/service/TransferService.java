@@ -20,14 +20,7 @@ public class TransferService {
 	private final Map<AccountType, AccountService> accountServiceMap;
 	private static final BigDecimal INITIAL_TRANSFER_FEE = BigDecimal.valueOf(1.02);
 	private static final BigDecimal TRANSFER_FEE = BigDecimal.valueOf(1.05);
-	private static final HashMap<Long, BigDecimal> TRANSFER_RULES = new HashMap<Long, BigDecimal>()
-	{{
-		put(0L, BigDecimal.ONE);
-		put(1L, BigDecimal.ONE);
-		put(2L, BigDecimal.ONE);
-		put(3L, INITIAL_TRANSFER_FEE);
-	}};
-
+	private static final Map<Long, BigDecimal> TRANSFER_RULES = buildTransferRules();
 
 	public TransferService(CreditAccountService creditAccountService, SaveAccountService saveAccountService) {
 		this.accountServiceMap = new HashMap<>();
@@ -71,5 +64,16 @@ public class TransferService {
 				.depositForTransfer(transfer.getAmount(), transfer.getTargetId());
 
 		return finalSourceBalance;
+	}
+
+
+	private static Map<Long, BigDecimal> buildTransferRules() {
+		Map<Long, BigDecimal> transferRules = new HashMap<>();
+		transferRules.put(0L, BigDecimal.ONE);
+		transferRules.put(1L, BigDecimal.ONE);
+		transferRules.put(2L, BigDecimal.ONE);
+		transferRules.put(3L, INITIAL_TRANSFER_FEE);
+
+		return transferRules;
 	}
 }
