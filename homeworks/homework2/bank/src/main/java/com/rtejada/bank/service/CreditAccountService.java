@@ -36,7 +36,7 @@ public class CreditAccountService implements AccountService {
 			throw new IllegalArgumentException("Cannot create account with balance:" + account.getBalance());
 		}
 
-		if (!account.getStatement().isEmpty()) {
+		if (!account.getStatementList().isEmpty()) {
 			throw new IllegalArgumentException("Cannot create account with statements");
 		}
 
@@ -170,7 +170,7 @@ public class CreditAccountService implements AccountService {
 			throw new InvalidAccountException(accountId);
 		}
 
-		return account.getStatement();
+		return account.getStatementList();
 	}
 
 	private static Map<Long, BigDecimal> buildWithdrawRules() {

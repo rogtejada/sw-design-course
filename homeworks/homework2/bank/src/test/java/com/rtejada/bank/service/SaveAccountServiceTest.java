@@ -34,7 +34,7 @@ public class SaveAccountServiceTest {
 
 		assertNotNull(result.getId());
 		assertEquals(BigDecimal.ZERO, account.getBalance());
-		assertTrue(account.getStatement().isEmpty());
+		assertTrue(account.getStatementList().isEmpty());
 	}
 
 	@Test
@@ -48,7 +48,7 @@ public class SaveAccountServiceTest {
 
 		assertNotNull(result.getId());
 		assertEquals(BigDecimal.ZERO, account.getBalance());
-		assertTrue(account.getStatement().isEmpty());
+		assertTrue(account.getStatementList().isEmpty());
 	}
 
 	@Test
@@ -322,7 +322,7 @@ public class SaveAccountServiceTest {
 
 		final Account accountResult = saveAccountService.getAccount(accountCreated.getId());
 
-		assertEquals(Transaction.TRANSFER, accountResult.getStatement().get(accountResult.getStatement().size() - 1).getTransaction());
+		assertEquals(Transaction.TRANSFER, accountResult.getStatementList().get(accountResult.getStatementList().size() - 1).getTransaction());
 	}
 
 	@Test
@@ -341,7 +341,7 @@ public class SaveAccountServiceTest {
 
 		final Account accountResult = saveAccountService.getAccount(accountCreated.getId());
 
-		assertEquals(Transaction.TRANSFER, accountResult.getStatement().get(accountResult.getStatement().size() - 1).getTransaction());
+		assertEquals(Transaction.TRANSFER, accountResult.getStatementList().get(accountResult.getStatementList().size() - 1).getTransaction());
 	}
 
 	@Test
@@ -508,7 +508,7 @@ public class SaveAccountServiceTest {
 
 		final Account accountResult = saveAccountService.getAccount(accountCreated.getId());
 
-		assertEquals(Transaction.TRANSFER, accountResult.getStatement().get(accountResult.getStatement().size() - 1).getTransaction());
+		assertEquals(Transaction.TRANSFER, accountResult.getStatementList().get(accountResult.getStatementList().size() - 1).getTransaction());
 	}
 
 	@Test
@@ -543,7 +543,7 @@ public class SaveAccountServiceTest {
 
 		final Account accountResult = saveAccountService.getAccount(accountCreated.getId());
 
-		assertEquals(Transaction.TRANSFER, accountResult.getStatement().get(accountResult.getStatement().size() - 1).getTransaction());
+		assertEquals(Transaction.TRANSFER, accountResult.getStatementList().get(accountResult.getStatementList().size() - 1).getTransaction());
 	}
 
 	@Test

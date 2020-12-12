@@ -12,7 +12,7 @@ public class Account {
 	private UUID id;
 	private BigDecimal balance;
 	private AccountType accountType;
-	private List<Statement> statement;
+	private List<Statement> statementList;
 	private Owner owner;
 	private LocalDateTime lastTransaction;
 	private LocalDate lastWithdraw;
@@ -21,7 +21,7 @@ public class Account {
 	private Long transferCount;
 
 	public Account() {
-		this.statement = new ArrayList<>();
+		this.statementList = new ArrayList<>();
 	}
 
 	public UUID getId() {
@@ -48,16 +48,16 @@ public class Account {
 		this.accountType = accountType;
 	}
 
-	public List<Statement> getStatement() {
-		return Collections.unmodifiableList(statement);
+	public List<Statement> getStatementList() {
+		return Collections.unmodifiableList(statementList);
 	}
 
 	public void addStatements(final List<Statement> statements) {
-		this.statement.addAll(statements);
+		this.statementList.addAll(statements);
 	}
 
 	public void addStatement(final Statement statement) {
-		this.statement.add(statement);
+		this.statementList.add(statement);
 	}
 
 	public Owner getOwner() {
@@ -76,8 +76,8 @@ public class Account {
 		this.lastTransaction = lastTransaction;
 	}
 
-	public void setStatement(List<Statement> statement) {
-		this.statement = statement;
+	public void setStatementList(List<Statement> statementList) {
+		this.statementList = statementList;
 	}
 
 	public LocalDate getLastWithdraw() {
