@@ -85,13 +85,8 @@ public class SaveAccountService implements AccountService {
 			throw new InvalidAccountException(accountId);
 		}
 
-		final Saving savingResult = calculateIncome(account);
-		account.setBalance(savingResult.getTotal());
-		account.addStatements(savingResult.getSavingsStatements());
-		account.setLastTransaction(savingResult.getLastTransaction());
-
+		account.setBalance(getBalance(accountId).add(amount));
 		account.setLastTransaction(LocalDateTime.now());
-		account.setBalance(account.getBalance().add(amount));
 		account.addStatement(new Statement(LocalDateTime.now(), amount, Transaction.DEPOSIT));
 
 		return account.getBalance();
@@ -126,12 +121,7 @@ public class SaveAccountService implements AccountService {
 			throw new InvalidAccountException(accountId);
 		}
 
-		final Saving savingResult = calculateIncome(account);
-		account.setBalance(savingResult.getTotal());
-		account.addStatements(savingResult.getSavingsStatements());
-		account.setLastTransaction(savingResult.getLastTransaction());
-
-		final BigDecimal finalBalance = account.getBalance().subtract(amount.multiply(WITHDRAW_FEE));
+		final BigDecimal finalBalance = getBalance(accountId).subtract(amount.multiply(WITHDRAW_FEE));
 
 		if (finalBalance.compareTo(BigDecimal.ZERO) < 0) {
 			throw new InvalidTransactionException("Cannot withdraw more than current balance");
@@ -156,12 +146,7 @@ public class SaveAccountService implements AccountService {
 			throw new InvalidAccountException(accountId);
 		}
 
-		final Saving savingResult = calculateIncome(account);
-		account.setBalance(savingResult.getTotal());
-		account.addStatements(savingResult.getSavingsStatements());
-		account.setLastTransaction(savingResult.getLastTransaction());
-
-		final BigDecimal finalBalance = account.getBalance().subtract(amount);
+		final BigDecimal finalBalance = getBalance(accountId).subtract(amount);
 
 		if (finalBalance.compareTo(BigDecimal.ZERO) < 0) {
 			throw new InvalidTransactionException("Cannot withdraw more than current balance");
