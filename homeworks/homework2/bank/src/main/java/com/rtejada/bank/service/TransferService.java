@@ -35,7 +35,7 @@ public class TransferService {
 
 			final Account sourceAccount = accountServiceMap.get(transfer.getSourceType()).getAccount(transfer.getSourceId());
 
-			String sourceCpf = accountServiceMap.get(transfer.getSourceType()).getAccount(transfer.getSourceId()).getOwner().getCpf();
+			String sourceCpf = sourceAccount.getOwner().getCpf();
 			String targetCpf = accountServiceMap.get(transfer.getTargetType()).getAccount(transfer.getTargetId()).getOwner().getCpf();
 
 			if (!sourceCpf.equals(targetCpf)) {
