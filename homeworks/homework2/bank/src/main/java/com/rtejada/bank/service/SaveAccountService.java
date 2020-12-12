@@ -18,6 +18,7 @@ public class SaveAccountService implements AccountService {
 
 	private final Map<UUID, Account> accounts;
 	private static final BigDecimal WITHDRAW_FEE = BigDecimal.valueOf(1.02);
+	private static final BigDecimal INCOME_FEE = BigDecimal.valueOf(0.22);
 
 	public SaveAccountService() {
 		this.accounts = new HashMap<>();
@@ -187,13 +188,13 @@ public class SaveAccountService implements AccountService {
 
 	private Saving calculateIncome(final Account account) {
 		LocalDateTime lastTransaction = account.getLastTransaction();
-		final long minutes = Duration.between(lastTransaction, LocalDateTime.now()).getSeconds() / 60;
+		final long minutes = Duration.between(lastTransaction, LocalDateTime.now()).toMinutes();
 
 		final List<Statement> statement = new ArrayList<>();
 		BigDecimal currentAmount = account.getBalance();
 
 		for (int i = 0; i < minutes; i++) {
-			BigDecimal incomeAmount = currentAmount.multiply(BigDecimal.valueOf(0.22));
+			BigDecimal incomeAmount = currentAmount.multiply(INCOME_FEE);
 			currentAmount = currentAmount.add(incomeAmount);
 			lastTransaction = lastTransaction.plusMinutes(1);
 			Statement income = new Statement(lastTransaction, incomeAmount, INCOME);
