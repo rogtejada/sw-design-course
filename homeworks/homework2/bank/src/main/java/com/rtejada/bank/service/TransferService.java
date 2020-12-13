@@ -1,5 +1,6 @@
 package com.rtejada.bank.service;
 
+import com.rtejada.bank.exception.InvalidAccountException;
 import com.rtejada.bank.exception.InvalidTransactionException;
 import com.rtejada.bank.model.Account;
 import com.rtejada.bank.model.AccountType;
@@ -8,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -33,10 +35,16 @@ public class TransferService {
 
 		if (SAVING.equals(transfer.getSourceType()) || SAVING.equals(transfer.getTargetType())) {
 
-			final Account sourceAccount = accountServiceMap.get(transfer.getSourceType()).getAccount(transfer.getSourceId());
+			final Account sourceAccount = accountServiceMap.get(transfer.getSourceType())
+					.getAccount(transfer.getSourceId())
+					.orElseThrow(() -> new InvalidAccountException(transfer.getSourceId()));
 
 			String sourceCpf = sourceAccount.getOwner().getCpf();
-			String targetCpf = accountServiceMap.get(transfer.getTargetType()).getAccount(transfer.getTargetId()).getOwner().getCpf();
+			String targetCpf = accountServiceMap.get(transfer.getTargetType())
+					.getAccount(transfer.getTargetId())
+					.orElseThrow(() -> new InvalidAccountException(transfer.getTargetId()))
+					.getOwner()
+					.getCpf();
 
 			if (!sourceCpf.equals(targetCpf)) {
 				throw new InvalidTransactionException("Cannot do transfer from/to saving account for different owners");
@@ -55,13 +63,15 @@ public class TransferService {
 			amountWithFee = transfer.getAmount().multiply(TRANSFER_FEE);
 		}
 
+		final LocalDateTime now = LocalDateTime.now();
+
 		final BigDecimal finalSourceBalance = accountServiceMap
 				.get(transfer.getSourceType())
-				.withdrawForTransfer(amountWithFee, transfer.getSourceId());
+				.withdrawForTransfer(amountWithFee, transfer.getSourceId(), now);
 
 		accountServiceMap
 				.get(transfer.getTargetType())
-				.depositForTransfer(transfer.getAmount(), transfer.getTargetId());
+				.depositForTransfer(transfer.getAmount(), transfer.getTargetId(), now);
 
 		return finalSourceBalance;
 	}

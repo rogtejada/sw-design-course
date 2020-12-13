@@ -316,11 +316,11 @@ public class SaveAccountServiceTest {
 		account.setOwner(buildOwner());
 
 		Account accountCreated = saveAccountService.createAccount(account);
-		BigDecimal result = saveAccountService.depositForTransfer(BigDecimal.TEN, accountCreated.getId());
+		BigDecimal result = saveAccountService.depositForTransfer(BigDecimal.TEN, accountCreated.getId(), LocalDateTime.now());
 
 		assertEquals(BigDecimal.TEN, result);
 
-		final Account accountResult = saveAccountService.getAccount(accountCreated.getId());
+		final Account accountResult = saveAccountService.getAccount(accountCreated.getId()).get();
 
 		assertEquals(Transaction.TRANSFER, accountResult.getStatementList().get(accountResult.getStatementList().size() - 1).getTransaction());
 	}
@@ -335,11 +335,11 @@ public class SaveAccountServiceTest {
 		BigDecimal hugeAmount = BigDecimal.valueOf(Long.MAX_VALUE).add(BigDecimal.valueOf(Long.MAX_VALUE));
 
 		Account accountCreated = saveAccountService.createAccount(account);
-		BigDecimal result = saveAccountService.depositForTransfer(hugeAmount, accountCreated.getId());
+		BigDecimal result = saveAccountService.depositForTransfer(hugeAmount, accountCreated.getId(), LocalDateTime.now());
 
 		assertEquals(hugeAmount, result);
 
-		final Account accountResult = saveAccountService.getAccount(accountCreated.getId());
+		final Account accountResult = saveAccountService.getAccount(accountCreated.getId()).get();
 
 		assertEquals(Transaction.TRANSFER, accountResult.getStatementList().get(accountResult.getStatementList().size() - 1).getTransaction());
 	}
@@ -353,7 +353,7 @@ public class SaveAccountServiceTest {
 
 		Account accountCreated = saveAccountService.createAccount(account);
 		assertThrows(
-				InvalidTransactionException.class, () -> saveAccountService.depositForTransfer(BigDecimal.TEN.negate(), accountCreated.getId()));
+				InvalidTransactionException.class, () -> saveAccountService.depositForTransfer(BigDecimal.TEN.negate(), accountCreated.getId(), LocalDateTime.now()));
 	}
 
 	@Test
@@ -365,19 +365,19 @@ public class SaveAccountServiceTest {
 
 		Account accountCreated = saveAccountService.createAccount(account);
 		assertThrows(
-				InvalidTransactionException.class, () -> saveAccountService.depositForTransfer(BigDecimal.ZERO, accountCreated.getId()));
+				InvalidTransactionException.class, () -> saveAccountService.depositForTransfer(BigDecimal.ZERO, accountCreated.getId(), LocalDateTime.now()));
 	}
 
 	@Test
 	public void shouldNotAllowDepositForTransferForInvalidAccount() {
 		assertThrows(
-				InvalidAccountException.class, () -> saveAccountService.depositForTransfer(BigDecimal.TEN, UUID.randomUUID()));
+				InvalidAccountException.class, () -> saveAccountService.depositForTransfer(BigDecimal.TEN, UUID.randomUUID(), LocalDateTime.now()));
 	}
 
 	@Test
 	public void shouldNotAllowDepositForTransferForNullAccount() {
 		assertThrows(
-				InvalidAccountException.class, () -> saveAccountService.depositForTransfer(BigDecimal.TEN, null));
+				InvalidAccountException.class, () -> saveAccountService.depositForTransfer(BigDecimal.TEN, null, LocalDateTime.now()));
 	}
 
 	@Test
@@ -501,12 +501,12 @@ public class SaveAccountServiceTest {
 		saveAccountService.deposit(BigDecimal.valueOf(1000), accountCreated.getId());
 
 		accountCreated.setLastTransaction(LocalDateTime.now().minusMinutes(1L));
-		BigDecimal result = saveAccountService.withdrawForTransfer(BigDecimal.valueOf(100), accountCreated.getId());
+		BigDecimal result = saveAccountService.withdrawForTransfer(BigDecimal.valueOf(100), accountCreated.getId(), LocalDateTime.now());
 
 		BigDecimal expectedResult = BigDecimal.valueOf(1000).multiply(BigDecimal.valueOf(1.22)).subtract(BigDecimal.valueOf(100));
 		assertEquals(expectedResult, result);
 
-		final Account accountResult = saveAccountService.getAccount(accountCreated.getId());
+		final Account accountResult = saveAccountService.getAccount(accountCreated.getId()).get();
 
 		assertEquals(Transaction.TRANSFER, accountResult.getStatementList().get(accountResult.getStatementList().size() - 1).getTransaction());
 	}
@@ -520,7 +520,7 @@ public class SaveAccountServiceTest {
 		Account accountCreated = saveAccountService.createAccount(account);
 		saveAccountService.deposit(BigDecimal.valueOf(1000), accountCreated.getId());
 
-		BigDecimal result = saveAccountService.withdrawForTransfer(BigDecimal.valueOf(1000), accountCreated.getId());
+		BigDecimal result = saveAccountService.withdrawForTransfer(BigDecimal.valueOf(1000), accountCreated.getId(), LocalDateTime.now());
 
 		assertEquals(BigDecimal.ZERO, result);
 	}
@@ -537,11 +537,11 @@ public class SaveAccountServiceTest {
 		Account accountCreated = saveAccountService.createAccount(account);
 		saveAccountService.deposit(hugeAmount, accountCreated.getId());
 
-		BigDecimal result = saveAccountService.withdrawForTransfer(hugeAmount, accountCreated.getId());
+		BigDecimal result = saveAccountService.withdrawForTransfer(hugeAmount, accountCreated.getId(), LocalDateTime.now());
 
 		assertEquals(BigDecimal.ZERO, result);
 
-		final Account accountResult = saveAccountService.getAccount(accountCreated.getId());
+		final Account accountResult = saveAccountService.getAccount(accountCreated.getId()).get();
 
 		assertEquals(Transaction.TRANSFER, accountResult.getStatementList().get(accountResult.getStatementList().size() - 1).getTransaction());
 	}
@@ -556,7 +556,7 @@ public class SaveAccountServiceTest {
 		saveAccountService.deposit(BigDecimal.valueOf(1000), accountCreated.getId());
 
 		assertThrows(
-				InvalidTransactionException.class, () -> saveAccountService.withdrawForTransfer(BigDecimal.TEN.negate(), accountCreated.getId()));
+				InvalidTransactionException.class, () -> saveAccountService.withdrawForTransfer(BigDecimal.TEN.negate(), accountCreated.getId(), LocalDateTime.now()));
 	}
 
 	@Test
@@ -569,19 +569,19 @@ public class SaveAccountServiceTest {
 		saveAccountService.deposit(BigDecimal.valueOf(1000), accountCreated.getId());
 
 		assertThrows(
-				InvalidTransactionException.class, () -> saveAccountService.withdrawForTransfer(BigDecimal.ZERO, accountCreated.getId()));
+				InvalidTransactionException.class, () -> saveAccountService.withdrawForTransfer(BigDecimal.ZERO, accountCreated.getId(), LocalDateTime.now()));
 	}
 
 	@Test
 	public void shouldNotAllowWithdrawForTransferFromInvalidAccount() {
 		assertThrows(
-				InvalidAccountException.class, () -> saveAccountService.withdrawForTransfer(BigDecimal.TEN, UUID.randomUUID()));
+				InvalidAccountException.class, () -> saveAccountService.withdrawForTransfer(BigDecimal.TEN, UUID.randomUUID(), LocalDateTime.now()));
 	}
 
 	@Test
 	public void shouldNotAllowWithdrawForTransferFromNullAccount() {
 		assertThrows(
-				InvalidAccountException.class, () -> saveAccountService.withdrawForTransfer(BigDecimal.TEN, null));
+				InvalidAccountException.class, () -> saveAccountService.withdrawForTransfer(BigDecimal.TEN, null, LocalDateTime.now()));
 	}
 
 	@Test
@@ -594,7 +594,7 @@ public class SaveAccountServiceTest {
 		saveAccountService.deposit(BigDecimal.valueOf(1000), accountCreated.getId());
 
 		assertThrows(
-				InvalidTransactionException.class, () -> saveAccountService.withdrawForTransfer(BigDecimal.valueOf(5000), accountCreated.getId()));
+				InvalidTransactionException.class, () -> saveAccountService.withdrawForTransfer(BigDecimal.valueOf(5000), accountCreated.getId(), LocalDateTime.now()));
 	}
 
 	@Test

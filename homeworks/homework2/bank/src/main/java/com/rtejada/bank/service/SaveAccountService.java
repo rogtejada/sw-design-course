@@ -49,22 +49,13 @@ public class SaveAccountService implements AccountService {
 		return account;
 	}
 
-	public Account getAccount(final UUID accountId) {
-		final Account account = accounts.get(accountId);
-
-		if (account == null) {
-			throw new InvalidAccountException(accountId);
-		}
-
-		return account;
+	public Optional<Account> getAccount(final UUID accountId) {
+		return Optional.ofNullable(accounts.get(accountId));
 	}
 
 	public BigDecimal getBalance(final UUID accountId) {
-		final Account account = accounts.get(accountId);
-
-		if (account == null) {
-			throw new InvalidAccountException(accountId);
-		}
+		final Account account = getAccount(accountId)
+				.orElseThrow(() -> new InvalidAccountException(accountId));
 
 		final Saving savingResult = calculateIncome(account);
 		account.setBalance(savingResult.getTotal());
@@ -79,32 +70,28 @@ public class SaveAccountService implements AccountService {
 			throw new InvalidTransactionException("Cannot deposit negative value");
 		}
 
-		final Account account = accounts.get(accountId);
+		final Account account = getAccount(accountId)
+				.orElseThrow(() -> new InvalidAccountException(accountId));
 
-		if (account == null) {
-			throw new InvalidAccountException(accountId);
-		}
+		final LocalDateTime now = LocalDateTime.now();
 
 		account.setBalance(getBalance(accountId).add(amount));
-		account.setLastTransaction(LocalDateTime.now());
-		account.addStatement(new Statement(LocalDateTime.now(), amount, Transaction.DEPOSIT));
+		account.setLastTransaction(now);
+		account.addStatement(new Statement(now, amount, Transaction.DEPOSIT));
 
 		return account.getBalance();
 	}
 
-	public BigDecimal depositForTransfer(final BigDecimal amount, final UUID accountId) {
+	public BigDecimal depositForTransfer(final BigDecimal amount, final UUID accountId, final LocalDateTime transferTime) {
 		if (amount.compareTo(BigDecimal.ZERO) <= 0) {
 			throw new InvalidTransactionException("Cannot deposit negative value");
 		}
 
-		final Account account = accounts.get(accountId);
-
-		if (account == null) {
-			throw new InvalidAccountException(accountId);
-		}
+		final Account account = getAccount(accountId)
+				.orElseThrow(() -> new InvalidAccountException(accountId));
 
 		account.setBalance(account.getBalance().add(amount));
-		account.addStatement(new Statement(LocalDateTime.now(), amount, Transaction.TRANSFER));
+		account.addStatement(new Statement(transferTime, amount, Transaction.TRANSFER));
 
 		return account.getBalance();
 	}
@@ -115,11 +102,8 @@ public class SaveAccountService implements AccountService {
 			throw new InvalidTransactionException("Cannot deposit negative value");
 		}
 
-		final Account account = accounts.get(accountId);
-
-		if (account == null) {
-			throw new InvalidAccountException(accountId);
-		}
+		final Account account = getAccount(accountId)
+				.orElseThrow(() -> new InvalidAccountException(accountId));
 
 		final BigDecimal finalBalance = getBalance(accountId).subtract(amount.multiply(WITHDRAW_FEE));
 
@@ -127,24 +111,22 @@ public class SaveAccountService implements AccountService {
 			throw new InvalidTransactionException("Cannot withdraw more than current balance");
 		}
 
-		account.setBalance(finalBalance);
-		account.setLastTransaction(LocalDateTime.now());
-		account.addStatement(new Statement(LocalDateTime.now(), amount.negate(), Transaction.WITHDRAW));
+		final LocalDateTime now = LocalDateTime.now();
 
+		account.setBalance(finalBalance);
+		account.setLastTransaction(now);
+		account.addStatement(new Statement(now, amount.negate(), Transaction.WITHDRAW));
 
 		return account.getBalance();
 	}
 
-	public BigDecimal withdrawForTransfer(final BigDecimal amount, final UUID accountId) {
+	public BigDecimal withdrawForTransfer(final BigDecimal amount, final UUID accountId, final LocalDateTime transferTime) {
 		if (amount.compareTo(BigDecimal.ZERO) <= 0) {
 			throw new InvalidTransactionException("Cannot deposit negative value");
 		}
 
-		final Account account = accounts.get(accountId);
-
-		if (account == null) {
-			throw new InvalidAccountException(accountId);
-		}
+		final Account account = getAccount(accountId)
+				.orElseThrow(() -> new InvalidAccountException(accountId));
 
 		final BigDecimal finalBalance = getBalance(accountId).subtract(amount);
 
@@ -153,22 +135,18 @@ public class SaveAccountService implements AccountService {
 		}
 
 		account.setBalance(finalBalance);
-		account.setLastTransaction(LocalDateTime.now());
-		account.setLastTransfer(LocalDate.now());
+		account.setLastTransaction(transferTime);
+		account.setLastTransfer(transferTime.toLocalDate());
 		account.setTransferCount(account.getTransferCount() == null ? 1L : account.getTransferCount() + 1);
-		account.addStatement(new Statement(LocalDateTime.now(), amount.negate(), Transaction.TRANSFER));
+		account.addStatement(new Statement(transferTime, amount.negate(), Transaction.TRANSFER));
 
 		return account.getBalance();
 	}
 
 	public List<Statement> getStatement(final UUID accountId) {
-		final Account account = accounts.get(accountId);
-
-		if (account == null) {
-			throw new InvalidAccountException(accountId);
-		}
-
-		return account.getStatementList();
+		return getAccount(accountId)
+				.orElseThrow(() -> new InvalidAccountException(accountId))
+				.getStatementList();
 	}
 
 	private Saving calculateIncome(final Account account) {

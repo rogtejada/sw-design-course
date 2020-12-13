@@ -7,9 +7,12 @@ import com.rtejada.bank.model.Owner;
 import com.rtejada.bank.model.Transfer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -40,15 +43,38 @@ public class TransferServiceTest {
 		transfer.setTargetType(AccountType.CREDIT);
 		transfer.setAmount(BigDecimal.valueOf(100));
 
-		when(creditAccountServiceMock.withdrawForTransfer(any(), any())).thenReturn(BigDecimal.TEN);
-		when(creditAccountServiceMock.depositForTransfer(any(), any())).thenReturn(BigDecimal.valueOf(100));
+		ArgumentCaptor<BigDecimal> withdrawAmountCaptor = ArgumentCaptor.forClass(BigDecimal.class);
+		ArgumentCaptor<UUID> sourceAccountIdCaptor = ArgumentCaptor.forClass(UUID.class);
+		ArgumentCaptor<LocalDateTime> withdrawTransferTimeCaptor = ArgumentCaptor.forClass(LocalDateTime.class);
+		when(creditAccountServiceMock.withdrawForTransfer(withdrawAmountCaptor.capture(), sourceAccountIdCaptor.capture(), withdrawTransferTimeCaptor.capture())).thenReturn(BigDecimal.TEN);
+
+		ArgumentCaptor<BigDecimal> depositAmountCaptor = ArgumentCaptor.forClass(BigDecimal.class);
+		ArgumentCaptor<UUID> targetAccountIdCaptor = ArgumentCaptor.forClass(UUID.class);
+		ArgumentCaptor<LocalDateTime> depositTransferTimeCaptor = ArgumentCaptor.forClass(LocalDateTime.class);
+		when(creditAccountServiceMock.depositForTransfer(depositAmountCaptor.capture(), targetAccountIdCaptor.capture(), depositTransferTimeCaptor.capture())).thenReturn(BigDecimal.valueOf(100));
 
 		final BigDecimal result = transferService.transfer(transfer);
 
 		assertEquals(BigDecimal.TEN, result);
 
-		verify(creditAccountServiceMock, times(1)).withdrawForTransfer(BigDecimal.valueOf(100).multiply(BigDecimal.valueOf(1.05)), transfer.getSourceId());
-		verify(creditAccountServiceMock, times(1)).depositForTransfer(BigDecimal.valueOf(100), transfer.getTargetId());
+		final BigDecimal withdrawAmount = withdrawAmountCaptor.getValue();
+		final UUID sourceAccountId = sourceAccountIdCaptor.getValue();
+		final LocalDateTime withdrawTransferTime = withdrawTransferTimeCaptor.getValue();
+
+		assertEquals(BigDecimal.valueOf(100).multiply(BigDecimal.valueOf(1.05)), withdrawAmount);
+		assertEquals(transfer.getSourceId(), sourceAccountId);
+
+		final BigDecimal depositAmount = depositAmountCaptor.getValue();
+		final UUID targetAccountId = targetAccountIdCaptor.getValue();
+		final LocalDateTime depositTransferTime = depositTransferTimeCaptor.getValue();
+
+		assertEquals(BigDecimal.valueOf(100), depositAmount);
+		assertEquals(transfer.getTargetId(), targetAccountId);
+
+		assertEquals(withdrawTransferTime, depositTransferTime);
+
+		verify(creditAccountServiceMock, times(1)).withdrawForTransfer(withdrawAmount, sourceAccountId, withdrawTransferTime);
+		verify(creditAccountServiceMock, times(1)).depositForTransfer(depositAmount, targetAccountId, depositTransferTime);
 	}
 
 	@Test
@@ -70,18 +96,42 @@ public class TransferServiceTest {
 		Account targetAccount = new Account();
 		targetAccount.setOwner(owner);
 
-		when(creditAccountServiceMock.getAccount(any())).thenReturn(sourceAccount);
-		when(saveAccountServiceMock.getAccount(any())).thenReturn(targetAccount);
-		when(creditAccountServiceMock.withdrawForTransfer(any(), any())).thenReturn(BigDecimal.TEN);
-		when(saveAccountServiceMock.depositForTransfer(any(), any())).thenReturn(BigDecimal.valueOf(100));
+		when(creditAccountServiceMock.getAccount(any())).thenReturn(Optional.of(sourceAccount));
+		when(saveAccountServiceMock.getAccount(any())).thenReturn(Optional.of(targetAccount));
+
+		ArgumentCaptor<BigDecimal> withdrawAmountCaptor = ArgumentCaptor.forClass(BigDecimal.class);
+		ArgumentCaptor<UUID> sourceAccountIdCaptor = ArgumentCaptor.forClass(UUID.class);
+		ArgumentCaptor<LocalDateTime> withdrawTransferTimeCaptor = ArgumentCaptor.forClass(LocalDateTime.class);
+		when(creditAccountServiceMock.withdrawForTransfer(withdrawAmountCaptor.capture(), sourceAccountIdCaptor.capture(), withdrawTransferTimeCaptor.capture())).thenReturn(BigDecimal.TEN);
+
+		ArgumentCaptor<BigDecimal> depositAmountCaptor = ArgumentCaptor.forClass(BigDecimal.class);
+		ArgumentCaptor<UUID> targetAccountIdCaptor = ArgumentCaptor.forClass(UUID.class);
+		ArgumentCaptor<LocalDateTime> depositTransferTimeCaptor = ArgumentCaptor.forClass(LocalDateTime.class);
+		when(saveAccountServiceMock.depositForTransfer(depositAmountCaptor.capture(), targetAccountIdCaptor.capture(), depositTransferTimeCaptor.capture())).thenReturn(BigDecimal.valueOf(100));
 
 
 		final BigDecimal result = transferService.transfer(transfer);
 
 		assertEquals(BigDecimal.TEN, result);
 
-		verify(creditAccountServiceMock, times(1)).withdrawForTransfer(BigDecimal.valueOf(100), transfer.getSourceId());
-		verify(saveAccountServiceMock, times(1)).depositForTransfer(BigDecimal.valueOf(100), transfer.getTargetId());
+		final BigDecimal withdrawAmount = withdrawAmountCaptor.getValue();
+		final UUID sourceAccountId = sourceAccountIdCaptor.getValue();
+		final LocalDateTime withdrawTransferTime = withdrawTransferTimeCaptor.getValue();
+
+		assertEquals(BigDecimal.valueOf(100), withdrawAmount);
+		assertEquals(transfer.getSourceId(), sourceAccountId);
+
+		final BigDecimal depositAmount = depositAmountCaptor.getValue();
+		final UUID targetAccountId = targetAccountIdCaptor.getValue();
+		final LocalDateTime depositTransferTime = depositTransferTimeCaptor.getValue();
+
+		assertEquals(BigDecimal.valueOf(100), depositAmount);
+		assertEquals(transfer.getTargetId(), targetAccountId);
+
+		assertEquals(withdrawTransferTime, depositTransferTime);
+
+		verify(creditAccountServiceMock, times(1)).withdrawForTransfer(withdrawAmount, sourceAccountId, withdrawTransferTime);
+		verify(saveAccountServiceMock, times(1)).depositForTransfer(depositAmount, targetAccountId, depositTransferTime);
 	}
 
 	@Test
@@ -103,18 +153,41 @@ public class TransferServiceTest {
 		Account targetAccount = new Account();
 		targetAccount.setOwner(owner);
 
-		when(saveAccountServiceMock.getAccount(any())).thenReturn(sourceAccount);
-		when(creditAccountServiceMock.getAccount(any())).thenReturn(targetAccount);
-		when(saveAccountServiceMock.withdrawForTransfer(any(), any())).thenReturn(BigDecimal.TEN);
-		when(creditAccountServiceMock.depositForTransfer(any(), any())).thenReturn(BigDecimal.valueOf(100));
+		when(saveAccountServiceMock.getAccount(any())).thenReturn(Optional.of(sourceAccount));
+		when(creditAccountServiceMock.getAccount(any())).thenReturn(Optional.of(targetAccount));
 
+		ArgumentCaptor<BigDecimal> withdrawAmountCaptor = ArgumentCaptor.forClass(BigDecimal.class);
+		ArgumentCaptor<UUID> sourceAccountIdCaptor = ArgumentCaptor.forClass(UUID.class);
+		ArgumentCaptor<LocalDateTime> withdrawTransferTimeCaptor = ArgumentCaptor.forClass(LocalDateTime.class);
+		when(saveAccountServiceMock.withdrawForTransfer(withdrawAmountCaptor.capture(), sourceAccountIdCaptor.capture(), withdrawTransferTimeCaptor.capture())).thenReturn(BigDecimal.TEN);
+
+		ArgumentCaptor<BigDecimal> depositAmountCaptor = ArgumentCaptor.forClass(BigDecimal.class);
+		ArgumentCaptor<UUID> targetAccountIdCaptor = ArgumentCaptor.forClass(UUID.class);
+		ArgumentCaptor<LocalDateTime> depositTransferTimeCaptor = ArgumentCaptor.forClass(LocalDateTime.class);
+		when(creditAccountServiceMock.depositForTransfer(depositAmountCaptor.capture(), targetAccountIdCaptor.capture(), depositTransferTimeCaptor.capture())).thenReturn(BigDecimal.valueOf(100));
 
 		final BigDecimal result = transferService.transfer(transfer);
 
 		assertEquals(BigDecimal.TEN, result);
 
-		verify(saveAccountServiceMock, times(1)).withdrawForTransfer(BigDecimal.valueOf(100), transfer.getSourceId());
-		verify(creditAccountServiceMock, times(1)).depositForTransfer(BigDecimal.valueOf(100), transfer.getTargetId());
+		final BigDecimal withdrawAmount = withdrawAmountCaptor.getValue();
+		final UUID sourceAccountId = sourceAccountIdCaptor.getValue();
+		final LocalDateTime withdrawTransferTime = withdrawTransferTimeCaptor.getValue();
+
+		assertEquals(BigDecimal.valueOf(100), withdrawAmount);
+		assertEquals(transfer.getSourceId(), sourceAccountId);
+
+		final BigDecimal depositAmount = depositAmountCaptor.getValue();
+		final UUID targetAccountId = targetAccountIdCaptor.getValue();
+		final LocalDateTime depositTransferTime = depositTransferTimeCaptor.getValue();
+
+		assertEquals(BigDecimal.valueOf(100), depositAmount);
+		assertEquals(transfer.getTargetId(), targetAccountId);
+
+		assertEquals(withdrawTransferTime, depositTransferTime);
+
+		verify(saveAccountServiceMock, times(1)).withdrawForTransfer(withdrawAmount, sourceAccountId, withdrawTransferTime);
+		verify(creditAccountServiceMock, times(1)).depositForTransfer(depositAmount, targetAccountId, depositTransferTime);
 	}
 
 	@Test
@@ -138,18 +211,42 @@ public class TransferServiceTest {
 		Account targetAccount = new Account();
 		targetAccount.setOwner(owner);
 
-		when(saveAccountServiceMock.getAccount(any())).thenReturn(sourceAccount);
-		when(creditAccountServiceMock.getAccount(any())).thenReturn(targetAccount);
-		when(saveAccountServiceMock.withdrawForTransfer(any(), any())).thenReturn(BigDecimal.TEN);
-		when(creditAccountServiceMock.depositForTransfer(any(), any())).thenReturn(BigDecimal.valueOf(100));
+		when(saveAccountServiceMock.getAccount(any())).thenReturn(Optional.of(sourceAccount));
+		when(creditAccountServiceMock.getAccount(any())).thenReturn(Optional.of(targetAccount));
+
+		ArgumentCaptor<BigDecimal> withdrawAmountCaptor = ArgumentCaptor.forClass(BigDecimal.class);
+		ArgumentCaptor<UUID> sourceAccountIdCaptor = ArgumentCaptor.forClass(UUID.class);
+		ArgumentCaptor<LocalDateTime> withdrawTransferTimeCaptor = ArgumentCaptor.forClass(LocalDateTime.class);
+		when(saveAccountServiceMock.withdrawForTransfer(withdrawAmountCaptor.capture(), sourceAccountIdCaptor.capture(), withdrawTransferTimeCaptor.capture())).thenReturn(BigDecimal.TEN);
+
+		ArgumentCaptor<BigDecimal> depositAmountCaptor = ArgumentCaptor.forClass(BigDecimal.class);
+		ArgumentCaptor<UUID> targetAccountIdCaptor = ArgumentCaptor.forClass(UUID.class);
+		ArgumentCaptor<LocalDateTime> depositTransferTimeCaptor = ArgumentCaptor.forClass(LocalDateTime.class);
+		when(creditAccountServiceMock.depositForTransfer(depositAmountCaptor.capture(), targetAccountIdCaptor.capture(), depositTransferTimeCaptor.capture())).thenReturn(BigDecimal.valueOf(100));
 
 
 		final BigDecimal result = transferService.transfer(transfer);
 
 		assertEquals(BigDecimal.TEN, result);
 
-		verify(saveAccountServiceMock, times(1)).withdrawForTransfer(BigDecimal.valueOf(100).multiply(BigDecimal.valueOf(1.02)), transfer.getSourceId());
-		verify(creditAccountServiceMock, times(1)).depositForTransfer(BigDecimal.valueOf(100), transfer.getTargetId());
+		final BigDecimal withdrawAmount = withdrawAmountCaptor.getValue();
+		final UUID sourceAccountId = sourceAccountIdCaptor.getValue();
+		final LocalDateTime withdrawTransferTime = withdrawTransferTimeCaptor.getValue();
+
+		assertEquals(BigDecimal.valueOf(100).multiply(BigDecimal.valueOf(1.02)), withdrawAmount);
+		assertEquals(transfer.getSourceId(), sourceAccountId);
+
+		final BigDecimal depositAmount = depositAmountCaptor.getValue();
+		final UUID targetAccountId = targetAccountIdCaptor.getValue();
+		final LocalDateTime depositTransferTime = depositTransferTimeCaptor.getValue();
+
+		assertEquals(BigDecimal.valueOf(100), depositAmount);
+		assertEquals(transfer.getTargetId(), targetAccountId);
+
+		assertEquals(withdrawTransferTime, depositTransferTime);
+
+		verify(saveAccountServiceMock, times(1)).withdrawForTransfer(withdrawAmount, sourceAccountId, withdrawTransferTime);
+		verify(creditAccountServiceMock, times(1)).depositForTransfer(depositAmount, targetAccountId, depositTransferTime);
 	}
 
 	@Test
@@ -173,19 +270,45 @@ public class TransferServiceTest {
 		Account targetAccount = new Account();
 		targetAccount.setOwner(owner);
 
-		when(saveAccountServiceMock.getAccount(any())).thenReturn(sourceAccount);
-		when(creditAccountServiceMock.getAccount(any())).thenReturn(targetAccount);
-		when(saveAccountServiceMock.withdrawForTransfer(any(), any())).thenReturn(BigDecimal.TEN);
-		when(creditAccountServiceMock.depositForTransfer(any(), any())).thenReturn(BigDecimal.valueOf(100));
+		when(saveAccountServiceMock.getAccount(any())).thenReturn(Optional.of(sourceAccount));
+		when(creditAccountServiceMock.getAccount(any())).thenReturn(Optional.of(targetAccount));
+
+		ArgumentCaptor<BigDecimal> withdrawAmountCaptor = ArgumentCaptor.forClass(BigDecimal.class);
+		ArgumentCaptor<UUID> sourceAccountIdCaptor = ArgumentCaptor.forClass(UUID.class);
+		ArgumentCaptor<LocalDateTime> withdrawTransferTimeCaptor = ArgumentCaptor.forClass(LocalDateTime.class);
+		when(saveAccountServiceMock.withdrawForTransfer(withdrawAmountCaptor.capture(), sourceAccountIdCaptor.capture(), withdrawTransferTimeCaptor.capture())).thenReturn(BigDecimal.TEN);
+
+		ArgumentCaptor<BigDecimal> depositAmountCaptor = ArgumentCaptor.forClass(BigDecimal.class);
+		ArgumentCaptor<UUID> targetAccountIdCaptor = ArgumentCaptor.forClass(UUID.class);
+		ArgumentCaptor<LocalDateTime> depositTransferTimeCaptor = ArgumentCaptor.forClass(LocalDateTime.class);
+		when(creditAccountServiceMock.depositForTransfer(depositAmountCaptor.capture(), targetAccountIdCaptor.capture(), depositTransferTimeCaptor.capture())).thenReturn(BigDecimal.valueOf(100));
+
 
 
 		final BigDecimal result = transferService.transfer(transfer);
 
 		assertEquals(BigDecimal.TEN, result);
 
-		verify(saveAccountServiceMock, times(1)).withdrawForTransfer(BigDecimal.valueOf(100).multiply(BigDecimal.valueOf(1.05)), transfer.getSourceId());
-		verify(creditAccountServiceMock, times(1)).depositForTransfer(BigDecimal.valueOf(100), transfer.getTargetId());
+		final BigDecimal withdrawAmount = withdrawAmountCaptor.getValue();
+		final UUID sourceAccountId = sourceAccountIdCaptor.getValue();
+		final LocalDateTime withdrawTransferTime = withdrawTransferTimeCaptor.getValue();
+
+		assertEquals(BigDecimal.valueOf(100).multiply(BigDecimal.valueOf(1.05)), withdrawAmount);
+		assertEquals(transfer.getSourceId(), sourceAccountId);
+
+		final BigDecimal depositAmount = depositAmountCaptor.getValue();
+		final UUID targetAccountId = targetAccountIdCaptor.getValue();
+		final LocalDateTime depositTransferTime = depositTransferTimeCaptor.getValue();
+
+		assertEquals(BigDecimal.valueOf(100), depositAmount);
+		assertEquals(transfer.getTargetId(), targetAccountId);
+
+		assertEquals(withdrawTransferTime, depositTransferTime);
+
+		verify(saveAccountServiceMock, times(1)).withdrawForTransfer(withdrawAmount, sourceAccountId, withdrawTransferTime);
+		verify(creditAccountServiceMock, times(1)).depositForTransfer(depositAmount, targetAccountId, depositTransferTime);
 	}
+
 
 	@Test
 	public void shouldNotAllowTransferFromSavingAccountFromDifferentOwners() {
@@ -208,8 +331,8 @@ public class TransferServiceTest {
 		owner.setName("John");
 		targetAccount.setOwner(targetOwner);
 
-		when(saveAccountServiceMock.getAccount(any())).thenReturn(sourceAccount);
-		when(creditAccountServiceMock.getAccount(any())).thenReturn(targetAccount);
+		when(saveAccountServiceMock.getAccount(any())).thenReturn(Optional.of(sourceAccount));
+		when(creditAccountServiceMock.getAccount(any())).thenReturn(Optional.of(targetAccount));
 
 		assertThrows(
 				InvalidTransactionException.class,
@@ -239,8 +362,8 @@ public class TransferServiceTest {
 		owner.setName("John");
 		targetAccount.setOwner(targetOwner);
 
-		when(creditAccountServiceMock.getAccount(any())).thenReturn(sourceAccount);
-		when(saveAccountServiceMock.getAccount(any())).thenReturn(targetAccount);
+		when(creditAccountServiceMock.getAccount(any())).thenReturn(Optional.of(sourceAccount));
+		when(saveAccountServiceMock.getAccount(any())).thenReturn(Optional.of(targetAccount));
 
 		assertThrows(
 				InvalidTransactionException.class,
