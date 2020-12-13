@@ -13,6 +13,8 @@ repositories {
 }
 
 dependencies {
+
+    implementation group: 'org.hibernate', name: 'hibernate-validator', version: '6.1.6.Final'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     testImplementation('org.springframework.boot:spring-boot-starter-test') {
         exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'

@@ -5,6 +5,7 @@ import com.rtejada.bank.v1.dto.TransferRequest;
 import com.rtejada.bank.v1.mapper.TransferMapper;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.math.BigDecimal;
 
 @RestController
@@ -20,7 +21,7 @@ public class TransferController {
 	}
 
 	@PostMapping()
-	public BigDecimal transfer(@RequestBody TransferRequest transferRequest) {
+	public BigDecimal transfer(@Valid @RequestBody TransferRequest transferRequest) {
 		return transferService.transfer(mapper.toEntity(transferRequest));
 	}
 }

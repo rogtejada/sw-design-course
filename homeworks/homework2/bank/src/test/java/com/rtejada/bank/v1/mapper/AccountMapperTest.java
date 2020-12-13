@@ -1,7 +1,6 @@
 package com.rtejada.bank.v1.mapper;
 
 import com.rtejada.bank.model.*;
-import com.rtejada.bank.v1.dto.AccountRequest;
 import com.rtejada.bank.v1.dto.AccountResponse;
 import com.rtejada.bank.v1.dto.StatementResponse;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,6 +12,7 @@ import java.time.Month;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class AccountMapperTest {
 
@@ -21,18 +21,6 @@ public class AccountMapperTest {
 	@BeforeEach
 	public void setUp() {
 		accountMapper = new AccountMapper();
-	}
-
-	@Test
-	public void shouldMapToEntity() {
-		AccountRequest request = new AccountRequest();
-		request.setCpf("04215411050");
-		request.setName("john");
-
-		final Account account = accountMapper.toEntity(request);
-
-		assertEquals(account.getOwner().getCpf(), request.getCpf());
-		assertEquals(account.getOwner().getName(), request.getName());
 	}
 
 	@Test
@@ -56,6 +44,26 @@ public class AccountMapperTest {
 	}
 
 	@Test
+	public void shouldNotAllowMapNullAccount() {
+		assertThrows(
+				IllegalArgumentException.class,
+				() ->  accountMapper.toResponse((Account) null));
+	}
+
+	@Test
+	public void shouldNotAllowMapAccountWithoutOwnser() {
+		Account account = new Account();
+		account.setId(UUID.randomUUID());
+		account.setAccountType(AccountType.CREDIT);
+
+		account.setOwner(null);
+
+		assertThrows(
+				IllegalArgumentException.class,
+				() ->  accountMapper.toResponse(account));
+	}
+
+	@Test
 	public void shouldMapToStatementResponse() {
 		Statement statement = new Statement(LocalDateTime.of(2000, Month.APRIL, 20, 10, 10), BigDecimal.TEN, Transaction.DEPOSIT);
 
@@ -64,5 +72,12 @@ public class AccountMapperTest {
 		assertEquals(statement.getDate(), result.getDate());
 		assertEquals(statement.getValue(), result.getValue());
 		assertEquals(statement.getTransaction(), result.getTransaction());
+	}
+
+	@Test
+	public void shouldNotAllowMapNullStatement() {
+		assertThrows(
+				IllegalArgumentException.class,
+				() ->  accountMapper.toResponse((Statement) null));
 	}
 }

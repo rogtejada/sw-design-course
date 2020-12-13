@@ -1,17 +1,26 @@
 package com.rtejada.bank.v1.dto;
 
 import com.rtejada.bank.model.AccountType;
-import org.springframework.stereotype.Component;
 
+import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.util.UUID;
 
 public class TransferRequest {
 
+	@NotNull
 	private UUID sourceId;
+
+	@NotNull
 	private AccountType sourceType;
+
+	@NotNull
 	private UUID targetId;
+
+	@NotNull
 	private AccountType targetType;
+
+	@NotNull
 	private BigDecimal amount;
 
 	public UUID getSourceId() {
