@@ -12,14 +12,14 @@ public class AccountMapper {
 
 	public AccountResponse toResponse(Account entity) {
 		if (entity == null) {
-			throw new IllegalArgumentException("Cannot map null account");
+			return null;
 		}
 		AccountResponse accountResponse = new AccountResponse();
 		accountResponse.setId(entity.getId());
 		accountResponse.setAccountType(entity.getAccountType());
 
 		if (entity.getOwner() == null) {
-			throw new IllegalArgumentException("Cannot map entity without owner");
+			return accountResponse;
 		}
 
 		OwnerResponse ownerResponse = new OwnerResponse();

@@ -11,8 +11,7 @@ import java.time.LocalDateTime;
 import java.time.Month;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class AccountMapperTest {
 
@@ -44,23 +43,23 @@ public class AccountMapperTest {
 	}
 
 	@Test
-	public void shouldNotAllowMapNullAccount() {
-		assertThrows(
-				IllegalArgumentException.class,
-				() ->  accountMapper.toResponse((Account) null));
+	public void shouldMapNullAccount() {
+		assertNull(accountMapper.toResponse((Account) null));
 	}
 
 	@Test
-	public void shouldNotAllowMapAccountWithoutOwnser() {
+	public void shouldMapAccountWithoutOwner() {
 		Account account = new Account();
 		account.setId(UUID.randomUUID());
 		account.setAccountType(AccountType.CREDIT);
 
 		account.setOwner(null);
 
-		assertThrows(
-				IllegalArgumentException.class,
-				() ->  accountMapper.toResponse(account));
+		final AccountResponse result = accountMapper.toResponse(account);
+
+		assertEquals(account.getId(), result.getId());
+		assertEquals(account.getAccountType(), result.getAccountType());
+		assertNull(result.getOwner());
 	}
 
 	@Test
