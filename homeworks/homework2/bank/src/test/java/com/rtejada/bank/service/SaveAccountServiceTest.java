@@ -3,6 +3,7 @@ package com.rtejada.bank.service;
 import com.rtejada.bank.exception.InvalidAccountException;
 import com.rtejada.bank.exception.InvalidTransactionException;
 import com.rtejada.bank.model.*;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -151,9 +152,9 @@ public class SaveAccountServiceTest {
 		Account accountCreated = saveAccountService.createAccount(account);
 		saveAccountService.deposit(BigDecimal.TEN, accountCreated.getId());
 
-		BigDecimal result = saveAccountService.getBalance(accountCreated.getId());
+		Optional<BigDecimal> result = saveAccountService.getBalance(accountCreated.getId());
 
-		assertEquals(BigDecimal.TEN, result);
+		assertEquals(BigDecimal.TEN, result.get());
 	}
 
 	@Test
@@ -167,9 +168,9 @@ public class SaveAccountServiceTest {
 		saveAccountService.deposit(BigDecimal.TEN, accountCreated.getId());
 
 		accountCreated.setLastTransaction(LocalDateTime.now().minusMinutes(1L));
-		BigDecimal result = saveAccountService.getBalance(accountCreated.getId());
+		Optional<BigDecimal> result = saveAccountService.getBalance(accountCreated.getId());
 
-		assertEquals(BigDecimal.TEN.multiply(BigDecimal.valueOf(1.22)), result);
+		assertEquals(BigDecimal.TEN.multiply(BigDecimal.valueOf(1.22)), result.get());
 	}
 
 	@Test
@@ -183,9 +184,9 @@ public class SaveAccountServiceTest {
 		saveAccountService.deposit(BigDecimal.TEN, accountCreated.getId());
 
 		accountCreated.setLastTransaction(LocalDateTime.now().minusMinutes(2L));
-		BigDecimal result = saveAccountService.getBalance(accountCreated.getId());
+		Optional<BigDecimal> result = saveAccountService.getBalance(accountCreated.getId());
 
-		assertEquals(BigDecimal.TEN.multiply(BigDecimal.valueOf(1.22)).multiply(BigDecimal.valueOf(1.22)), result);
+		assertEquals(BigDecimal.TEN.multiply(BigDecimal.valueOf(1.22)).multiply(BigDecimal.valueOf(1.22)), result.get());
 	}
 
 	@Test
@@ -197,9 +198,9 @@ public class SaveAccountServiceTest {
 
 		Account accountCreated = saveAccountService.createAccount(account);
 
-		BigDecimal result = saveAccountService.getBalance(accountCreated.getId());
+		Optional<BigDecimal> result = saveAccountService.getBalance(accountCreated.getId());
 
-		assertEquals(BigDecimal.ZERO, result);
+		assertEquals(BigDecimal.ZERO, result.get());
 	}
 
 	@Test

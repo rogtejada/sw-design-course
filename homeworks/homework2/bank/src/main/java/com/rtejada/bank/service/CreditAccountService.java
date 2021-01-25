@@ -51,11 +51,11 @@ public class CreditAccountService implements AccountService {
 		return Optional.ofNullable(accounts.get(accountId));
 	}
 
-	public BigDecimal getBalance(final UUID accountId) {
+	public Optional<BigDecimal> getBalance(final UUID accountId) {
 		final Account account = getAccount(accountId)
 				.orElseThrow(() -> new InvalidAccountException(accountId));
 
-		return account.getBalance();
+		return Optional.ofNullable(account.getBalance());
 	}
 
 	public BigDecimal deposit(final BigDecimal amount, final UUID accountId) {

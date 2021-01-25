@@ -3,6 +3,7 @@ package com.rtejada.bank.service;
 import com.rtejada.bank.exception.InvalidAccountException;
 import com.rtejada.bank.exception.InvalidTransactionException;
 import com.rtejada.bank.model.*;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -150,9 +151,9 @@ public class CreditAccountServiceTest {
 		Account accountCreated = creditAccountService.createAccount(account);
 		creditAccountService.deposit(BigDecimal.TEN, accountCreated.getId());
 
-		BigDecimal result = creditAccountService.getBalance(accountCreated.getId());
+		Optional<BigDecimal> result = creditAccountService.getBalance(accountCreated.getId());
 
-		assertEquals(BigDecimal.TEN, result);
+		assertEquals(BigDecimal.TEN, result.get());
 	}
 
 	@Test
@@ -164,9 +165,9 @@ public class CreditAccountServiceTest {
 
 		Account accountCreated = creditAccountService.createAccount(account);
 
-		BigDecimal result = creditAccountService.getBalance(accountCreated.getId());
+		Optional<BigDecimal> result = creditAccountService.getBalance(accountCreated.getId());
 
-		assertEquals(BigDecimal.ZERO, result);
+		assertEquals(BigDecimal.ZERO, result.get());
 	}
 
 	@Test

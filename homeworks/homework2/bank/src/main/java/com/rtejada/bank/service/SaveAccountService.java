@@ -53,7 +53,7 @@ public class SaveAccountService implements AccountService {
 		return Optional.ofNullable(accounts.get(accountId));
 	}
 
-	public BigDecimal getBalance(final UUID accountId) {
+	public Optional<BigDecimal> getBalance(final UUID accountId) {
 		final Account account = getAccount(accountId)
 				.orElseThrow(() -> new InvalidAccountException(accountId));
 
@@ -62,7 +62,7 @@ public class SaveAccountService implements AccountService {
 		account.addStatements(savingResult.getSavingsStatements());
 		account.setLastTransaction(savingResult.getLastTransaction());
 
-		return account.getBalance();
+		return Optional.ofNullable(account.getBalance());
 	}
 
 	public BigDecimal deposit(final BigDecimal amount, final UUID accountId) {
@@ -75,7 +75,7 @@ public class SaveAccountService implements AccountService {
 
 		final LocalDateTime now = LocalDateTime.now();
 
-		account.setBalance(getBalance(accountId).add(amount));
+		account.setBalance(getBalance(accountId).orElseThrow(() -> new InvalidAccountException(accountId)).add(amount));
 		account.setLastTransaction(now);
 		account.addStatement(new Statement(now, amount, Transaction.DEPOSIT));
 
@@ -105,7 +105,10 @@ public class SaveAccountService implements AccountService {
 		final Account account = getAccount(accountId)
 				.orElseThrow(() -> new InvalidAccountException(accountId));
 
-		final BigDecimal finalBalance = getBalance(accountId).subtract(amount.multiply(WITHDRAW_FEE));
+		final BigDecimal finalBalance =
+				getBalance(accountId)
+						.orElseThrow(() -> new InvalidAccountException(accountId))
+						.subtract(amount.multiply(WITHDRAW_FEE));
 
 		if (finalBalance.compareTo(BigDecimal.ZERO) < 0) {
 			throw new InvalidTransactionException("Cannot withdraw more than current balance");
@@ -128,7 +131,9 @@ public class SaveAccountService implements AccountService {
 		final Account account = getAccount(accountId)
 				.orElseThrow(() -> new InvalidAccountException(accountId));
 
-		final BigDecimal finalBalance = getBalance(accountId).subtract(amount);
+		final BigDecimal finalBalance = getBalance(accountId)
+				.orElseThrow(() -> new InvalidAccountException(accountId))
+				.subtract(amount);
 
 		if (finalBalance.compareTo(BigDecimal.ZERO) < 0) {
 			throw new InvalidTransactionException("Cannot withdraw more than current balance");

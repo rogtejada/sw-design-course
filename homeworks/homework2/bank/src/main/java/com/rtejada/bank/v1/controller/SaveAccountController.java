@@ -1,5 +1,6 @@
 package com.rtejada.bank.v1.controller;
 
+import com.rtejada.bank.exception.InvalidAccountException;
 import com.rtejada.bank.model.AccountType;
 import com.rtejada.bank.service.SaveAccountService;
 import com.rtejada.bank.v1.dto.AccountRequest;
@@ -37,7 +38,9 @@ public class SaveAccountController {
 
 	@GetMapping("/{accountId}/balance")
 	public BigDecimal getBalance(@PathVariable UUID accountId) {
-		return saveAccountService.getBalance(accountId);
+		return saveAccountService
+				.getBalance(accountId)
+				.orElseThrow(() -> new InvalidAccountException(accountId));
 	}
 
 	@PostMapping("/{accountId}/deposit")

@@ -15,7 +15,7 @@ public interface AccountService {
 
 	Optional<Account> getAccount(final UUID accountId);
 
-	BigDecimal getBalance(final UUID accountId);
+	Optional<BigDecimal> getBalance(final UUID accountId);
 
 	BigDecimal deposit(final BigDecimal amount, final UUID accountId);
 
