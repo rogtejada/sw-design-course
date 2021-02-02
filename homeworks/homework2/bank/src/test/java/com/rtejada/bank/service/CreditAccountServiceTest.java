@@ -172,14 +172,12 @@ public class CreditAccountServiceTest {
 
 	@Test
 	public void shouldNotAllowGetBalanceFromInvalidAccount() {
-		assertThrows(
-				InvalidAccountException.class, () -> creditAccountService.getBalance(UUID.randomUUID()));
+		assertFalse(creditAccountService.getBalance(UUID.randomUUID()).isPresent());
 	}
 
 	@Test
 	public void shouldNotAllowGetBalanceFromNullAccount() {
-		assertThrows(
-				InvalidAccountException.class, () -> creditAccountService.getBalance(null));
+		assertFalse(creditAccountService.getBalance(null).isPresent());
 	}
 
 	@Test

@@ -52,10 +52,7 @@ public class CreditAccountService implements AccountService {
 	}
 
 	public Optional<BigDecimal> getBalance(final UUID accountId) {
-		final Account account = getAccount(accountId)
-				.orElseThrow(() -> new InvalidAccountException(accountId));
-
-		return Optional.ofNullable(account.getBalance());
+		return getAccount(accountId).map(Account::getBalance);
 	}
 
 	public BigDecimal deposit(final BigDecimal amount, final UUID accountId) {
